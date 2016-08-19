@@ -1,0 +1,18 @@
+# Output files
+*.o
+*.so
+/build
+
+# Local files
+/dist
+*~*
+*.swp
+*.swo
+.clang_complete
+GPATH
+GRTAGS
+GSYMS
+GTAGS
+tags
+\#*
+.\#*
