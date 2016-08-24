@@ -64,3 +64,7 @@ install(TARGETS
         msiSudoObjMetaRemove
         DESTINATION
         /var/lib/irods/plugins/microservices)
+
+install(FILES "policies.re"
+        DESTINATION /etc/irods
+        RENAME sudo-policies.re)
