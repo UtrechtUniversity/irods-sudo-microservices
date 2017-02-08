@@ -16,7 +16,7 @@ namespace Sudo {
             std::cerr << __FILE__ << ": User name must be a string.\n";
             return SYS_INVALID_INPUT_PARAM;
         }
-        const std::string userStr = parseMspForStr(userName_);
+        const std::string userStr = stringFromMsp(userName_);
 
         std::string userName, zoneName;
         std::tie(userName, zoneName) = splitUserZone(userStr, rei);

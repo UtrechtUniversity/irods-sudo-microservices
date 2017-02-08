@@ -35,6 +35,24 @@ namespace Sudo {
      */
     int sudo(ruleExecInfo_t *rei, std::function<int()> f);
 
+    /**
+     * \brief Get a string from the given msParam.
+     *
+     * parseMspForStr returns NULL for strings that equal "null".
+     * This is undesirable when we pass on "null" to e.g. ACL
+     * functions, or use it as a metadata value.
+     *
+     * This function calls parseMspForStr and changes NULL return
+     * values to "null". The caller is expected to check that this is
+     * a valid string parameter (i.e. `param != NULL` and
+     * `strcmp(param->type, STR_MS_T) == 0`).
+     *
+     * \param param
+     *
+     * \return
+     */
+    std::string stringFromMsp(msParam_t *param);
+
     typedef std::pair<std::string, msParam_t*> ParamParam;
     typedef std::pair<std::string, std::string>  StrParam;
     typedef std::pair<std::string, int>          IntParam;

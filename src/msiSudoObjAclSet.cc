@@ -21,7 +21,7 @@ namespace Sudo {
         } else if (std::string(recursive_->type) == STR_MS_T) {
 
             // Accept a string for msiSetACL compatibility.
-            const std::string recursiveStr = parseMspForStr(recursive_);
+            const std::string recursiveStr = stringFromMsp(recursive_);
             if (recursiveStr == "recursive" || recursiveStr == "1") {
                 recursive = true;
             } else if (recursiveStr == "default" || recursiveStr == "0") {
@@ -40,7 +40,7 @@ namespace Sudo {
             return SYS_INVALID_INPUT_PARAM;
         }
 
-        std::string accessLevel = parseMspForStr(accessLevel_);
+        std::string accessLevel = stringFromMsp(accessLevel_);
         if (accessLevel != "null"
             && accessLevel != "read"
             && accessLevel != "write"
@@ -59,7 +59,7 @@ namespace Sudo {
             std::cerr << __FILE__ << ": Other name must be a string.\n";
             return SYS_INVALID_INPUT_PARAM;
         }
-        const std::string otherUserStr = parseMspForStr(otherName_);
+        const std::string otherUserStr = stringFromMsp(otherName_);
 
         std::string otherName, otherZone;
         std::tie(otherName, otherZone) = splitUserZone(otherUserStr, rei);
@@ -75,7 +75,7 @@ namespace Sudo {
             std::cerr << __FILE__ << ": Object path must be a string.\n";
             return SYS_INVALID_INPUT_PARAM;
         }
-        const std::string objPath = parseMspForStr(objPath_);
+        const std::string objPath = stringFromMsp(objPath_);
 
         modAccessControlInp_t modAcParams = { };
         modAcParams.recursiveFlag = recursive;

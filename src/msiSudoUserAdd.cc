@@ -20,25 +20,25 @@ namespace Sudo {
             std::cerr << __FILE__ << ": User name must be a string.\n";
             return SYS_INVALID_INPUT_PARAM;
         }
-        const std::string userStr = parseMspForStr(userName_);
+        const std::string userStr = stringFromMsp(userName_);
 
         if (std::string(initialMetaAttr_->type) != STR_MS_T) {
             std::cerr << __FILE__ << ": Initial attribute must be a string.\n";
             return SYS_INVALID_INPUT_PARAM;
         }
-        const std::string initialMetaAttr = parseMspForStr(initialMetaAttr_);
+        const std::string initialMetaAttr = stringFromMsp(initialMetaAttr_);
 
         if (std::string(initialMetaValue_->type) != STR_MS_T) {
             std::cerr << __FILE__ << ": Initial value must be a string.\n";
             return SYS_INVALID_INPUT_PARAM;
         }
-        const std::string initialMetaValue = parseMspForStr(initialMetaValue_);
+        const std::string initialMetaValue = stringFromMsp(initialMetaValue_);
 
         if (std::string(initialMetaUnit_->type) != STR_MS_T) {
             std::cerr << __FILE__ << ": Initial unit must be a string.\n";
             return SYS_INVALID_INPUT_PARAM;
         }
-        const std::string initialMetaUnit = parseMspForStr(initialMetaUnit_);
+        const std::string initialMetaUnit = stringFromMsp(initialMetaUnit_);
 
         std::string userName, zoneName;
         std::tie(userName, zoneName) = splitUserZone(userStr, rei);

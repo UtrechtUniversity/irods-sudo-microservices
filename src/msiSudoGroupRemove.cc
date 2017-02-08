@@ -16,7 +16,7 @@ namespace Sudo {
             std::cerr << __FILE__ << ": Group name must be a string.\n";
             return SYS_INVALID_INPUT_PARAM;
         }
-        const std::string groupName = parseMspForStr(groupName_);
+        const std::string groupName = stringFromMsp(groupName_);
 
         generalAdminInp_t adminParams = { };
 

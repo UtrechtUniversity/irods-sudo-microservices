@@ -20,31 +20,31 @@ namespace Sudo {
             std::cerr << __FILE__ << ": Object name must be a string.\n";
             return SYS_INVALID_INPUT_PARAM;
         }
-        const std::string objName = parseMspForStr(objName_);
+        const std::string objName = stringFromMsp(objName_);
 
         if (std::string(objType_->type) != STR_MS_T) {
             std::cerr << __FILE__ << ": Object type must be a string.\n";
             return SYS_INVALID_INPUT_PARAM;
         }
-        const std::string objType = parseMspForStr(objType_);
+        const std::string objType = stringFromMsp(objType_);
 
         if (std::string(attribute_->type) != STR_MS_T) {
             std::cerr << __FILE__ << ": Attribute must be a string.\n";
             return SYS_INVALID_INPUT_PARAM;
         }
-        const std::string attribute = parseMspForStr(attribute_);
+        const std::string attribute = stringFromMsp(attribute_);
 
         if (std::string(value_->type) != STR_MS_T) {
             std::cerr << __FILE__ << ": Value must be a string.\n";
             return SYS_INVALID_INPUT_PARAM;
         }
-        const std::string value = parseMspForStr(value_);
+        const std::string value = stringFromMsp(value_);
 
         if (std::string(unit_->type) != STR_MS_T) {
             std::cerr << __FILE__ << ": Unit must be a string.\n";
             return SYS_INVALID_INPUT_PARAM;
         }
-        const std::string unit = parseMspForStr(unit_);
+        const std::string unit = stringFromMsp(unit_);
 
         modAVUMetadataInp_t modAvuParams = { };
         modAvuParams.arg0 = const_cast<char*>("add");

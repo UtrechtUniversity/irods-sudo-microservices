@@ -47,6 +47,15 @@ namespace Sudo {
         return ret;
     }
 
+    std::string stringFromMsp(msParam_t *param) {
+        if (!param)
+            return "null";
+
+        const char *str = parseMspForStr(param);
+
+        return str ? str : "null";
+    }
+
     ParamArray &ParamArray::operator<<(const ParamParam &param) {
         char      *label = strdup(std::get<0>(param).c_str());
         msParam_t *value = std::get<1>(param);

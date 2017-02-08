@@ -20,25 +20,25 @@ namespace Sudo {
             std::cerr << __FILE__ << ": Group name must be a string.\n";
             return SYS_INVALID_INPUT_PARAM;
         }
-        const std::string groupName = parseMspForStr(groupName_);
+        const std::string groupName = stringFromMsp(groupName_);
 
         if (std::string(initialMetaAttr_->type) != STR_MS_T) {
             std::cerr << __FILE__ << ": Initial attribute must be a string.\n";
             return SYS_INVALID_INPUT_PARAM;
         }
-        const std::string initialMetaAttr = parseMspForStr(initialMetaAttr_);
+        const std::string initialMetaAttr = stringFromMsp(initialMetaAttr_);
 
         if (std::string(initialMetaValue_->type) != STR_MS_T) {
             std::cerr << __FILE__ << ": Initial value must be a string.\n";
             return SYS_INVALID_INPUT_PARAM;
         }
-        const std::string initialMetaValue = parseMspForStr(initialMetaValue_);
+        const std::string initialMetaValue = stringFromMsp(initialMetaValue_);
 
         if (std::string(initialMetaUnit_->type) != STR_MS_T) {
             std::cerr << __FILE__ << ": Initial unit must be a string.\n";
             return SYS_INVALID_INPUT_PARAM;
         }
-        const std::string initialMetaUnit = parseMspForStr(initialMetaUnit_);
+        const std::string initialMetaUnit = stringFromMsp(initialMetaUnit_);
 
         // NB: XXX: Icommands and other iRODS sources deem it safe
         // to pass const pointers in non-const pointer fields in

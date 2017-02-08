@@ -17,13 +17,13 @@ namespace Sudo {
             std::cerr << __FILE__ << ": Group name must be a string.\n";
             return SYS_INVALID_INPUT_PARAM;
         }
-        const std::string groupName = parseMspForStr(groupName_);
+        const std::string groupName = stringFromMsp(groupName_);
 
         if (std::string(userName_->type) != STR_MS_T) {
             std::cerr << __FILE__ << ": User name must be a string.\n";
             return SYS_INVALID_INPUT_PARAM;
         }
-        const std::string userStr = parseMspForStr(userName_);
+        const std::string userStr = stringFromMsp(userName_);
 
         std::string userName, zoneName;
         std::tie(userName, zoneName) = splitUserZone(userStr, rei);
