@@ -1,19 +1,21 @@
 /**
  * \file
- * \brief     Group add sudo microservice.
+ * \brief     Common sudo microservice functionalities.
  * \author    Chris Smeele
- * \copyright Copyright (c) 2016, Utrecht University. All rights reserved.
+ * \copyright Copyright (c) 2016, 2017, Utrecht University. All rights reserved.
  */
 #pragma once
 
 #include "irods_includes.hh"
 #include <vector>
 #include <string>
-#include <ostream>
 #include <functional>
 #include <tuple>
 
 namespace Sudo {
+    using namespace std::literals::string_literals;
+
+    void writeLog(const std::string &funcName, int type, const std::string &msg);
 
     std::tuple<std::string, std::string> splitUserZone(const std::string &userZoneStr,
                                                        const ruleExecInfo_t *rei);
@@ -28,12 +30,39 @@ namespace Sudo {
      * Use this function with care, try to limit the amount of code
      * that executes within the function.
      *
-     * \param rei The rule execution info struct.
-     * \param f   The function to execute with altered privileges.
+     * \param rei  The rule execution info struct.
+     * \param func The function to execute with altered privileges.
      *
-     * \return    The return value of the provided function.
+     * \return     The return value of the provided function.
      */
-    int sudo(ruleExecInfo_t *rei, std::function<int()> f);
+    template<typename F>
+    int sudo(ruleExecInfo_t *rei, F func) {
+        // Backup.
+        int authBupC = rei->uoic->authInfo.authFlag;
+        int authBupP = rei->uoip->authInfo.authFlag;
+
+        // Elevate privileges.
+        rei->uoic->authInfo.authFlag = LOCAL_PRIV_USER_AUTH;
+        rei->uoip->authInfo.authFlag = LOCAL_PRIV_USER_AUTH;
+
+        int ret = -1;
+
+        try {
+            // Call privileged function.
+            ret = func();
+        } catch (...) {
+            // Restore privileges.
+            rei->uoip->authInfo.authFlag = authBupP;
+            rei->uoic->authInfo.authFlag = authBupC;
+            throw;
+        }
+
+        rei->uoip->authInfo.authFlag = authBupP;
+        rei->uoic->authInfo.authFlag = authBupC;
+
+        return ret;
+    }
+
 
     /**
      * \brief Get a string from the given msParam.
@@ -53,65 +82,51 @@ namespace Sudo {
      */
     std::string stringFromMsp(msParam_t *param);
 
-    typedef std::pair<std::string, msParam_t*> ParamParam;
-    typedef std::pair<std::string, std::string>  StrParam;
-    typedef std::pair<std::string, int>          IntParam;
+    /**
+     * \brief Call a rule with the given const char* parameters.
+     *
+     * Output parameters are not supported.
+     *
+     * \param ruleName
+     * \param msParams
+     * \param rei
+     *
+     * \return The rule status code
+     */
+    int callRule(const std::string &ruleName, const std::vector<const char*> &params,    ruleExecInfo_t *rei);
 
-    class ParamArray {
-        std::vector<std::string> labels;
-        std::vector<void*> toFree;
+    /**
+     * \brief Call a rule with the given string parameters.
+     *
+     * Output parameters are not supported.
+     *
+     * \param ruleName
+     * \param msParams
+     * \param rei
+     *
+     * \return The rule status code
+     */
+    int callRule(const std::string &ruleName, const std::vector<std::string> &strParams, ruleExecInfo_t *rei);
 
-    public:
-        msParamArray_t array;
-        const std::vector<std::string> &getLabels() {
-            return labels;
-        }
+    /**
+     * \brief Call a rule with the given msParam_t parameters.
+     *
+     * Parameters will be stringified before being passed to the rule.
+     * Output parameters are not supported.
+     *
+     * \param ruleName
+     * \param msParams
+     * \param rei
+     *
+     * \return The rule status code
+     */
+    int callRule(const std::string &ruleName, const std::vector<msParam_t*>  &msParams,  ruleExecInfo_t *rei);
 
-        ParamArray &operator<<(const ParamParam  &param);
-        ParamArray &operator<<(const StrParam    &param);
-        ParamArray &operator<<(const IntParam    &param);
-        ParamArray &operator<<(const std::string &param);
-
-        std::string getType(const std::string &label);
-        std::string getStr( const std::string &label);
-        int         getInt( const std::string &label);
-
-        ParamArray()
-            : array{ }
-            { }
-
-        ~ParamArray() {
-            clearMsParamArray(&array, false);
-            for (void *s : toFree)
-                free(s);
-        }
-
-        friend int callRule(const std::string&, ParamArray&, ruleExecInfo_t*);
-    };
-
-    // MSI signature shorthands for use with policify().
-    // Due to template characteristics, we need to have the rei
-    // parameter up front. 
-    typedef std::function<int(ruleExecInfo_t*,
-                              msParam_t*)> msi_1param_t;
-    typedef std::function<int(ruleExecInfo_t*,
-                              msParam_t*, msParam_t*)> msi_2param_t;
-    typedef std::function<int(ruleExecInfo_t*,
-                              msParam_t*, msParam_t*, msParam_t*)> msi_3param_t;
-    typedef std::function<int(ruleExecInfo_t*,
-                              msParam_t*, msParam_t*, msParam_t*, msParam_t*)> msi_4param_t;
-    typedef std::function<int(ruleExecInfo_t*,
-                              msParam_t*, msParam_t*, msParam_t*, msParam_t*,
-                              msParam_t*)> msi_5param_t;
-    typedef std::function<int(ruleExecInfo_t*,
-                              msParam_t*, msParam_t*, msParam_t*, msParam_t*,
-                              msParam_t*, msParam_t*)> msi_6param_t;
-    typedef std::function<int(ruleExecInfo_t*,
-                              msParam_t*, msParam_t*, msParam_t*, msParam_t*,
-                              msParam_t*, msParam_t*, msParam_t*)> msi_7param_t;
-    typedef std::function<int(ruleExecInfo_t*,
-                              msParam_t*, msParam_t*, msParam_t*, msParam_t*,
-                              msParam_t*, msParam_t*, msParam_t*, msParam_t*)> msi_8param_t;
+    // For lack of C++17 class template deduction...
+    template<typename T>
+    std::vector<T> makeVector(std::initializer_list<T> list) {
+        return std::vector<T>(list);
+    }
 
     /**
      * \brief Apply pre- and post actions around an MSI call.
@@ -126,37 +141,34 @@ namespace Sudo {
      * The `msParam_t` parameters should not be modified by the `pre`
      * and `post` actions. Any changes will not be visible to the
      * microservice.
-     * 
+     *
      * \tparam Arg... Any number of `msParam_t` types.
-     * 
+     *
      * \param name    The name that's used to generate policy names (i.e. `"acPre" + name + "()"`)
-     * \param f       The msi implementation. Parameter order must be `rei*` first, then `msParam*`s.
+     * \param f       The msi implementation callable. Parameter order must be `rei*` first, then `msParam*`s.
      * \param rei     The rule execution information.
      * \param args... The `Arg...` amount of `msParam_t` parameters to be passed to the MSI.
      *
      * \return 0 if both policies and the actual msi succeeded,
      *         otherwise the first error code encountered.
      */
-    template<class ...Arg>
+    template<typename F, typename... Arg>
     int policify(const std::string &name,
-                 std::function<int(ruleExecInfo_t*, Arg...)> f,
+                 F func,
                  ruleExecInfo_t *rei,
                  Arg... args) {
 
-        ParamArray params;
-        size_t i = 0;
-        for (auto &param : {args...})
-            params << ParamParam(std::string("*___param") + std::to_string(++i), param);
-        
-        int status = callRule(std::string("acPre") + name, params, rei);
-        if (status) 
+        auto argVector = makeVector({args...});
+
+        int status = callRule("acPre"s + name, argVector, rei);
+        if (status)
             return status;
 
-        status = f(rei, args...);
-        if (status) 
+        status = func(rei, args...);
+        if (status)
             return status;
 
-        status = callRule(std::string("acPost") + name, params, rei);
+        status = callRule("acPost"s + name, argVector, rei);
         return status;
     }
 }

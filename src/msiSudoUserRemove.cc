@@ -2,18 +2,19 @@
  * \file
  * \brief     User remove sudo microservice.
  * \author    Chris Smeele
- * \copyright Copyright (c) 2016, Utrecht University. All rights reserved.
+ * \copyright Copyright (c) 2016, 2017, Utrecht University. All rights reserved.
  */
 #include "common.hh"
-#include <generalAdmin.h>
+#include <rsGeneralAdmin.hpp>
 
 namespace Sudo {
+
     int userRemove(ruleExecInfo_t *rei,
                    msParam_t *userName_,
                    msParam_t *policyKv_) {
 
-        if (std::string(userName_->type) != STR_MS_T) {
-            std::cerr << __FILE__ << ": User name must be a string.\n";
+        if (strcmp(userName_->type, STR_MS_T)) {
+            writeLog(__func__, LOG_ERROR, "User name must be a string.");
             return SYS_INVALID_INPUT_PARAM;
         }
         const std::string userStr = stringFromMsp(userName_);
@@ -34,7 +35,7 @@ namespace Sudo {
         adminParams.arg8 = const_cast<char*>("");
         adminParams.arg9 = const_cast<char*>("");
 
-        return sudo(rei, std::bind<int>(rsGeneralAdmin, rei->rsComm, &adminParams));
+        return sudo(rei, [&]() { return rsGeneralAdmin(rei->rsComm, &adminParams); });
     }
 }
 
@@ -44,19 +45,18 @@ extern "C" {
                           ruleExecInfo_t *rei) {
 
         return Sudo::policify("SudoUserRemove",
-                              Sudo::msi_2param_t(Sudo::userRemove),
+                              Sudo::userRemove,
                               rei,
                               userName_,
                               policyKv_);
     }
 
-    irods::ms_table_entry* plugin_factory() {
+    irods::ms_table_entry *plugin_factory() {
 
-        irods::ms_table_entry* msvc = new irods::ms_table_entry(2);
+        irods::ms_table_entry *msvc = new irods::ms_table_entry(2);
 
-        // C symbol, rule symbol.
         msvc->add_operation("msiSudoUserRemove",
-                            "msiSudoUserRemove");
+                            std::function<decltype(msiSudoUserRemove)>(msiSudoUserRemove));
         return msvc;
     }
 }

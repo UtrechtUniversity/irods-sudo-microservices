@@ -2,12 +2,13 @@
  * \file
  * \brief     Object metadata remove sudo microservice.
  * \author    Chris Smeele
- * \copyright Copyright (c) 2016, Utrecht University. All rights reserved.
+ * \copyright Copyright (c) 2016, 2017, Utrecht University. All rights reserved.
  */
 #include "common.hh"
-#include <modAVUMetadata.h>
+#include <rsModAVUMetadata.hpp>
 
 namespace Sudo {
+
     int objMetaRemove(ruleExecInfo_t *rei,
                       msParam_t *objName_,
                       msParam_t *objType_,
@@ -17,45 +18,54 @@ namespace Sudo {
                       msParam_t *unit_,
                       msParam_t *policyKv_) {
 
-        if (std::string(objName_->type) != STR_MS_T) {
-            std::cerr << __FILE__ << ": Object name must be a string.\n";
+        if (strcmp(objName_->type, STR_MS_T)) {
+            writeLog(__func__, LOG_ERROR, "Object name must be a string.");
             return SYS_INVALID_INPUT_PARAM;
         }
         const std::string objName = stringFromMsp(objName_);
 
-        if (std::string(objType_->type) != STR_MS_T) {
-            std::cerr << __FILE__ << ": Object type must be a string.\n";
+        if (strcmp(objType_->type, STR_MS_T)) {
+            writeLog(__func__, LOG_ERROR, "Object type must be a string.");
             return SYS_INVALID_INPUT_PARAM;
         }
         const std::string objType = stringFromMsp(objType_);
 
-        if (std::string(wildcards_->type) != INT_MS_T) {
-            std::cerr << __FILE__ << ": Wildcards flag must be an int (0|1).\n";
+        bool wildcards = false;
+
+        if (!strcmp(wildcards_->type, STR_MS_T)) {
+
+            const std::string wildcardsStr = stringFromMsp(wildcards_);
+            if (wildcardsStr == "wildcards" || wildcardsStr == "1") {
+                wildcards = true;
+            } else if (wildcardsStr == "0" || !wildcardsStr.length()) {
+                wildcards = false;
+            }
+        } else {
+            writeLog(__func__, LOG_ERROR, "Wildcards flag must be a string (\"wildcards\", or empty).");
             return SYS_INVALID_INPUT_PARAM;
         }
-        bool wildcards = parseMspForPosInt(wildcards_) > 0;
 
-        if (std::string(attribute_->type) != STR_MS_T) {
-            std::cerr << __FILE__ << ": Attribute must be a string.\n";
+        if (strcmp(attribute_->type, STR_MS_T)) {
+            writeLog(__func__, LOG_ERROR, "Attribute must be a string.");
             return SYS_INVALID_INPUT_PARAM;
         }
         const std::string attribute = stringFromMsp(attribute_);
 
-        if (std::string(value_->type) != STR_MS_T) {
-            std::cerr << __FILE__ << ": Value must be a string.\n";
+        if (strcmp(value_->type, STR_MS_T)) {
+            writeLog(__func__, LOG_ERROR, "Value must be a string.");
             return SYS_INVALID_INPUT_PARAM;
         }
         const std::string value = stringFromMsp(value_);
 
-        if (std::string(unit_->type) != STR_MS_T) {
-            std::cerr << __FILE__ << ": Unit must be a string.\n";
+        if (strcmp(unit_->type, STR_MS_T)) {
+            writeLog(__func__, LOG_ERROR, "Unit must be a string.");
             return SYS_INVALID_INPUT_PARAM;
         }
         const std::string unit = stringFromMsp(unit_);
 
         if (!wildcards && value.empty()) {
             // We must be able to set the value to '%'.
-            std::cerr << __FILE__ << ": Value may not be empty when wildcards are disabled.\n";
+            writeLog(__func__, LOG_ERROR, "Value may not be empty when wildcards are disabled.");
             return SYS_INVALID_INPUT_PARAM;
             // This does not apply to the unit field, which can be omitted (left empty).
         }
@@ -82,13 +92,12 @@ namespace Sudo {
         modAvuParams.arg8 = const_cast<char*>("");
         modAvuParams.arg9 = const_cast<char*>("");
 
-        return sudo(rei, std::bind<int>(rsModAVUMetadata, rei->rsComm, &modAvuParams));
-        // return rsModAVUMetadata(rei->rsComm, &modAvuParams);
+        return sudo(rei, [&]() { return rsModAVUMetadata(rei->rsComm, &modAvuParams); });
     }
 }
 
 extern "C" {
-    
+
     int msiSudoObjMetaRemove(msParam_t *objName_,
                              msParam_t *objType_,
                              msParam_t *wildcards_,
@@ -99,7 +108,7 @@ extern "C" {
                              ruleExecInfo_t *rei) {
 
         return Sudo::policify("SudoObjMetaRemove",
-                              Sudo::msi_7param_t(Sudo::objMetaRemove),
+                              Sudo::objMetaRemove,
                               rei,
                               objName_,
                               objType_,
@@ -110,13 +119,12 @@ extern "C" {
                               policyKv_);
     }
 
-    irods::ms_table_entry* plugin_factory() {
+    irods::ms_table_entry *plugin_factory() {
 
-        irods::ms_table_entry* msvc = new irods::ms_table_entry(7);
+        irods::ms_table_entry *msvc = new irods::ms_table_entry(7);
 
-        // C symbol, rule symbol.
         msvc->add_operation("msiSudoObjMetaRemove",
-                            "msiSudoObjMetaRemove");
+                            std::function<decltype(msiSudoObjMetaRemove)>(msiSudoObjMetaRemove));
         return msvc;
     }
 }

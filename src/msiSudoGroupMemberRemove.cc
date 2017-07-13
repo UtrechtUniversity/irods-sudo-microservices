@@ -2,25 +2,26 @@
  * \file
  * \brief     Group member remove sudo microservice.
  * \author    Chris Smeele
- * \copyright Copyright (c) 2016, Utrecht University. All rights reserved.
+ * \copyright Copyright (c) 2016, 2017, Utrecht University. All rights reserved.
  */
 #include "common.hh"
-#include <generalAdmin.h>
+#include <rsGeneralAdmin.hpp>
 
 namespace Sudo {
+
     int groupMemberRemove(ruleExecInfo_t *rei,
                           msParam_t *groupName_,
                           msParam_t *userName_,
                           msParam_t *policyKv_) {
 
-        if (std::string(groupName_->type) != STR_MS_T) {
-            std::cerr << __FILE__ << ": Group name must be a string.\n";
+        if (strcmp(groupName_->type, STR_MS_T)) {
+            writeLog(__func__, LOG_ERROR, "Group name must be a string.");
             return SYS_INVALID_INPUT_PARAM;
         }
         const std::string groupName = stringFromMsp(groupName_);
 
-        if (std::string(userName_->type) != STR_MS_T) {
-            std::cerr << __FILE__ << ": User name must be a string.\n";
+        if (strcmp(userName_->type, STR_MS_T)) {
+            writeLog(__func__, LOG_ERROR, "User name must be a string.");
             return SYS_INVALID_INPUT_PARAM;
         }
         const std::string userStr = stringFromMsp(userName_);
@@ -41,7 +42,7 @@ namespace Sudo {
         adminParams.arg8 = const_cast<char*>("");
         adminParams.arg9 = const_cast<char*>("");
 
-        return sudo(rei, std::bind<int>(rsGeneralAdmin, rei->rsComm, &adminParams));
+        return sudo(rei, [&]() { return rsGeneralAdmin(rei->rsComm, &adminParams); });
     }
 }
 
@@ -52,20 +53,20 @@ extern "C" {
                                  ruleExecInfo_t *rei) {
 
         return Sudo::policify("SudoGroupMemberRemove",
-                              Sudo::msi_3param_t(Sudo::groupMemberRemove),
+                              Sudo::groupMemberRemove,
                               rei,
                               groupName_,
                               userName_,
                               policyKv_);
     }
 
-    irods::ms_table_entry* plugin_factory() {
+    irods::ms_table_entry *plugin_factory() {
 
-        irods::ms_table_entry* msvc = new irods::ms_table_entry(3);
+        irods::ms_table_entry *msvc = new irods::ms_table_entry(3);
 
-        // C symbol, rule symbol.
         msvc->add_operation("msiSudoGroupMemberRemove",
-                            "msiSudoGroupMemberRemove");
+                            std::function<decltype(msiSudoGroupMemberRemove)>(msiSudoGroupMemberRemove));
+
         return msvc;
     }
 }

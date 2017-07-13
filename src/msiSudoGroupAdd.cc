@@ -2,13 +2,14 @@
  * \file
  * \brief     Group add sudo microservice.
  * \author    Chris Smeele
- * \copyright Copyright (c) 2016, Utrecht University. All rights reserved.
+ * \copyright Copyright (c) 2016, 2017, Utrecht University. All rights reserved.
  */
 #include "common.hh"
-#include <generalAdmin.h>
-#include <modAVUMetadata.h>
+#include <rsGeneralAdmin.hpp>
+#include <rsModAVUMetadata.hpp>
 
 namespace Sudo {
+
     int groupAdd(ruleExecInfo_t *rei,
                  msParam_t *groupName_,
                  msParam_t *initialMetaAttr_,
@@ -16,35 +17,29 @@ namespace Sudo {
                  msParam_t *initialMetaUnit_,
                  msParam_t *policyKv_) {
 
-        if (std::string(groupName_->type) != STR_MS_T) {
-            std::cerr << __FILE__ << ": Group name must be a string.\n";
+        if (strcmp(groupName_->type, STR_MS_T)) {
+            writeLog(__func__, LOG_ERROR, "Group name must be a string.");
             return SYS_INVALID_INPUT_PARAM;
         }
         const std::string groupName = stringFromMsp(groupName_);
 
-        if (std::string(initialMetaAttr_->type) != STR_MS_T) {
-            std::cerr << __FILE__ << ": Initial attribute must be a string.\n";
+        if (strcmp(initialMetaAttr_->type, STR_MS_T)) {
+            writeLog(__func__, LOG_ERROR, "Initial attribute must be a string.");
             return SYS_INVALID_INPUT_PARAM;
         }
         const std::string initialMetaAttr = stringFromMsp(initialMetaAttr_);
 
-        if (std::string(initialMetaValue_->type) != STR_MS_T) {
-            std::cerr << __FILE__ << ": Initial value must be a string.\n";
+        if (strcmp(initialMetaValue_->type, STR_MS_T)) {
+            writeLog(__func__, LOG_ERROR, "Initial value must be a string.");
             return SYS_INVALID_INPUT_PARAM;
         }
         const std::string initialMetaValue = stringFromMsp(initialMetaValue_);
 
-        if (std::string(initialMetaUnit_->type) != STR_MS_T) {
-            std::cerr << __FILE__ << ": Initial unit must be a string.\n";
+        if (strcmp(initialMetaUnit_->type, STR_MS_T)) {
+            writeLog(__func__, LOG_ERROR, "Initial unit must be a string.");
             return SYS_INVALID_INPUT_PARAM;
         }
         const std::string initialMetaUnit = stringFromMsp(initialMetaUnit_);
-
-        // NB: XXX: Icommands and other iRODS sources deem it safe
-        // to pass const pointers in non-const pointer fields in
-        // all *Inp_t structs. However ugly, we follow that
-        // example. It appears guaranteed that the contents of the
-        // struct will not be modified.
 
         generalAdminInp_t adminParams = { };
 
@@ -59,10 +54,7 @@ namespace Sudo {
         adminParams.arg8 = const_cast<char*>("");
         adminParams.arg9 = const_cast<char*>("");
 
-        // return sudo(rei, [&]() -> int {
-        //     return rsUserAdmin(rei->rsComm, &adminParams);
-        // });
-        int status = sudo(rei, std::bind<int>(rsGeneralAdmin, rei->rsComm, &adminParams));
+        int status = sudo(rei, [&]() { return rsGeneralAdmin(rei->rsComm, &adminParams); });
 
         if (status)
             return status;
@@ -80,7 +72,7 @@ namespace Sudo {
             modAvuParams.arg8 = const_cast<char*>("");
             modAvuParams.arg9 = const_cast<char*>("");
 
-            status = sudo(rei, std::bind<int>(rsModAVUMetadata, rei->rsComm, &modAvuParams));
+            status = sudo(rei, [&]() { return rsModAVUMetadata(rei->rsComm, &modAvuParams); });
         }
 
         return status;
@@ -96,7 +88,7 @@ extern "C" {
                         ruleExecInfo_t *rei) {
 
         return Sudo::policify("SudoGroupAdd",
-                              Sudo::msi_5param_t(Sudo::groupAdd),
+                              Sudo::groupAdd,
                               rei,
                               groupName_,
                               initialMetaAttr_,
@@ -105,13 +97,13 @@ extern "C" {
                               policyKv_);
     }
 
-    irods::ms_table_entry* plugin_factory() {
+    irods::ms_table_entry *plugin_factory() {
 
-        irods::ms_table_entry* msvc = new irods::ms_table_entry(5);
+        irods::ms_table_entry *msvc = new irods::ms_table_entry(5);
 
-        // C symbol, rule symbol.
         msvc->add_operation("msiSudoGroupAdd",
-                            "msiSudoGroupAdd");
+                            std::function<decltype(msiSudoGroupAdd)>(msiSudoGroupAdd));
+
         return msvc;
     }
 }
