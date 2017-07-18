@@ -1,11 +1,4 @@
 test {
-    #*errcode = errormsg(msiGaGroupAdd("grp-pizza"), *errmsg);
-    *kv1."." = "1";
-    *kv1."hoi" = ":)";
-    *kv1."werkt dit?" = "blijkbaar, ja.";
-    #*kv2."." = "";
-
-    #*a = errorcode(acPreSudoObjAclSet("recursive",1,1,1,1));
     #*a = errorcode(msiSudoUserAdd("pietje", "", "", "", ""));
     #*a = errorcode(msiSudoUserAdd(1, "", "", "", ""));
     #writeLine("stdout", "result: *a");
@@ -18,10 +11,13 @@ test {
 
     resetStuff();
 
+    *kv1."asdf" = "bsdf";
+    *kv1."bsdf" = "csdf";
+
     writeLine("stdout", "Adding user <pietje>");
-    msiSudoUserAdd("pietje", "", "", "", "")                      ::: msiSudoUserRemove("pietje", "");
+    msiSudoUserAdd("pietje", "", "", "", *kv1)                  ::: msiSudoUserRemove("pietje", "");
     writeLine("stdout", "Adding group <grp-pietje>");
-    msiSudoGroupAdd("grp-pietje", "", "", "", *kv1)               ::: msiSudoGroupRemove("grp-pietje", "");
+    msiSudoGroupAdd("grp-pietje", "", "", "", "")               ::: msiSudoGroupRemove("grp-pietje", "");
     writeLine("stdout", "Adding user <pietje> to group <grp-pietje>");
     msiSudoGroupMemberAdd("grp-pietje", "pietje", "") ::: msiSudoGroupMemberRemove("grp-pietje", "pietje", "");
     #writeLine("stdout", "Adding user <chris> to group <grp-pietje>");

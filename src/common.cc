@@ -33,56 +33,46 @@ namespace Sudo {
         return str ? str : "null";
     }
 
-    std::vector<std::string> stringifyMsParams(const std::vector<msParam_t*> &msParams) {
+    std::list<boost::any> anyifyMsParams(const std::vector<msParam_t*> &msParams) {
 
-        std::vector<std::string> strParams;
+        std::list<boost::any> argList;
 
         for (auto p : msParams) {
-            if (!strcmp(p->type, STR_MS_T)) {
-                strParams.push_back(stringFromMsp(p));
-            } else if (!strcmp(p->type, INT_MS_T)) {
-                strParams.push_back(std::to_string(parseMspForPosInt(p)));
-            } else { // Add types when needed.
-                writeLog(__func__, LOG_ERROR, "Unsupported MSI parameter type <"s + p->type + ">");
-                strParams.push_back("");
+            if (p && p->type && p->inOutStruct) {
+                // p->type is NULL when we have an undefined variable
+                // as an argument.  Since we never have output-only
+                // parameters, we can require all parameters to be
+                // defined.
+
+                if (!strcmp(p->type, STR_MS_T)) {
+                    argList.push_back(stringFromMsp(p));
+                } else if (!strcmp(p->type, INT_MS_T)) {
+                    argList.push_back(parseMspForPosInt(p));
+                } else if (!strcmp(p->type, KeyValPair_MS_T)) {
+                    argList.push_back((keyValPair_t*)p->inOutStruct);
+                } else { // Add types when needed.
+                    writeLog(__func__, LOG_ERROR, "Unsupported MSI parameter type <"s + p->type + ">");
+                }
+            } else {
+                writeLog(__func__, LOG_ERROR, "NULL MSI parameter");
             }
         }
-        return strParams;
-    }
 
-    int callRule(const std::string &ruleName,
-                 const std::vector<const char*> &params_,
-                 ruleExecInfo_t *rei) {
-
-        // Copy params, because applyRuleArg expects a mutable list.
-        auto params = params_;
-
-        // Call the rule.
-        int status = applyRuleArg(ruleName.c_str(),
-                                  params.data(),
-                                  static_cast<int>(params.size()),
-                                  rei,
-                                  NO_SAVE_REI);
-        return status;
-    }
-
-    int callRule(const std::string &ruleName,
-                 const std::vector<std::string> &strParams,
-                 ruleExecInfo_t *rei) {
-
-        // Convert a list of std::string to a list of const char*.
-        std::vector<const char*> params;
-        for (const auto &v : strParams)
-            params.push_back(v.c_str());
-
-        return callRule(ruleName, params, rei);
+        return argList;
     }
 
     int callRule(const std::string &ruleName,
                  const std::vector<msParam_t*> &msParams,
                  ruleExecInfo_t *rei) {
 
-        // Convert a list of msParam_t to a list of stringified parameters.
-        return callRule(ruleName, stringifyMsParams(msParams), rei);
+        return callRule(ruleName, anyifyMsParams(msParams), rei);
+    }
+
+    int callRule(const std::string &ruleName, const std::list<boost::any> &params_, ruleExecInfo_t *rei) {
+
+        // Copy params, because applyRuleWithInOutVars expects a mutable list.
+        auto params = params_;
+
+        return applyRuleWithInOutVars(ruleName.c_str(), params, rei);
     }
 }

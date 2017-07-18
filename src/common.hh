@@ -63,7 +63,6 @@ namespace Sudo {
         return ret;
     }
 
-
     /**
      * \brief Get a string from the given msParam.
      *
@@ -83,20 +82,20 @@ namespace Sudo {
     std::string stringFromMsp(msParam_t *param);
 
     /**
-     * \brief Call a rule with the given const char* parameters.
+     * \brief Convert a list of msParams (of STR, INT or KeyVal types)
+     *        to boost::any-wrapped types that are serializable by iRODS.
      *
-     * Output parameters are not supported.
+     * Unconvertible types and undefined parameters are logged as
+     * errors and discarded from the output.
      *
-     * \param ruleName
      * \param msParams
-     * \param rei
      *
-     * \return The rule status code
+     * \return
      */
-    int callRule(const std::string &ruleName, const std::vector<const char*> &params,    ruleExecInfo_t *rei);
+    std::list<boost::any> anyifyMsParams(const std::vector<msParam_t*> &msParams);
 
     /**
-     * \brief Call a rule with the given string parameters.
+     * \brief Call a rule with the given boost::any parameters.
      *
      * Output parameters are not supported.
      *
@@ -106,27 +105,9 @@ namespace Sudo {
      *
      * \return The rule status code
      */
-    int callRule(const std::string &ruleName, const std::vector<std::string> &strParams, ruleExecInfo_t *rei);
-
-    /**
-     * \brief Call a rule with the given msParam_t parameters.
-     *
-     * Parameters will be stringified before being passed to the rule.
-     * Output parameters are not supported.
-     *
-     * \param ruleName
-     * \param msParams
-     * \param rei
-     *
-     * \return The rule status code
-     */
-    int callRule(const std::string &ruleName, const std::vector<msParam_t*>  &msParams,  ruleExecInfo_t *rei);
-
-    // For lack of C++17 class template deduction...
-    template<typename T>
-    std::vector<T> makeVector(std::initializer_list<T> list) {
-        return std::vector<T>(list);
-    }
+    int callRule(const std::string &ruleName,
+                 const std::list<boost::any> &msParams,
+                 ruleExecInfo_t *rei);
 
     /**
      * \brief Apply pre- and post actions around an MSI call.
@@ -137,6 +118,10 @@ namespace Sudo {
      *
      * The `pre` and `post` actions are called with the same
      * parameters as the MSI itself.
+     *
+     * If any of the input parameters are not defined or of an
+     * unrecognized type (only int, string and keyval list are
+     * supported), a SYS_INVALID_INPUT_PARAM error is returned.
      *
      * The `msParam_t` parameters should not be modified by the `pre`
      * and `post` actions. Any changes will not be visible to the
@@ -158,9 +143,13 @@ namespace Sudo {
                  ruleExecInfo_t *rei,
                  Arg... args) {
 
-        auto argVector = makeVector({args...});
+        auto argList = anyifyMsParams({args...});
+        if (argList.size() != sizeof...(args)) {
+            // Could not parse all arguments (unrecognized types or undefined arguments).
+            return SYS_INVALID_INPUT_PARAM;
+        }
 
-        int status = callRule("acPre"s + name, argVector, rei);
+        int status = callRule("acPre"s + name, argList, rei);
         if (status)
             return status;
 
@@ -168,7 +157,7 @@ namespace Sudo {
         if (status)
             return status;
 
-        status = callRule("acPost"s + name, argVector, rei);
+        status = callRule("acPost"s + name, argList, rei);
         return status;
     }
 }

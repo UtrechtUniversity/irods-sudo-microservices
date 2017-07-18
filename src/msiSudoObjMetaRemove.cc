@@ -35,10 +35,13 @@ namespace Sudo {
         if (!strcmp(wildcards_->type, STR_MS_T)) {
 
             const std::string wildcardsStr = stringFromMsp(wildcards_);
-            if (wildcardsStr == "wildcards" || wildcardsStr == "1") {
+            if (wildcardsStr == "wildcards") {
                 wildcards = true;
-            } else if (wildcardsStr == "0" || !wildcardsStr.length()) {
+            } else if (!wildcardsStr.length()) {
                 wildcards = false;
+            } else {
+                writeLog(__func__, LOG_ERROR, "Wildcards flag must be a string (\"wildcards\", or empty).");
+                return SYS_INVALID_INPUT_PARAM;
             }
         } else {
             writeLog(__func__, LOG_ERROR, "Wildcards flag must be a string (\"wildcards\", or empty).");

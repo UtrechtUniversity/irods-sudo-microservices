@@ -21,9 +21,9 @@ namespace Sudo {
         if (!strcmp(recursive_->type, STR_MS_T)) {
 
             const std::string recursiveStr = stringFromMsp(recursive_);
-            if (recursiveStr == "recursive" || recursiveStr == "1") {
+            if (recursiveStr == "recursive") {
                 recursive = true;
-            } else if (recursiveStr == "default" || recursiveStr == "0" || !recursiveStr.length()) {
+            } else if (!recursiveStr.length()) {
                 recursive = false;
             } else {
                 writeLog(__func__, LOG_ERROR, "Recursive flag must be a string (\"recursive\", or empty).");
