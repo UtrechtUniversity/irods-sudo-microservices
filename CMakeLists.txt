@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 2.8.12)
 
 find_package(IRODS 4.2.1 EXACT REQUIRED)
 
+message(STATUS "Building for irods-server version ${IRODS_VERSION}")
+
 # Note: Microservices for iRODS >=4.2 need to be built with the compiler and
 # standard libarary provided by iRODS-externals packages.
 # The following packages need to be installed to build the sudo microservices:
@@ -65,3 +67,52 @@ install(TARGETS
 install(FILES "policies.re"
         DESTINATION /etc/irods
         RENAME sudo-default-policies.re)
+
+# Packaging {{{
+
+# Make sure your umask is set correctly when packaging:
+# The default umask on CentOS 7 is 0002, which results in e.g. rwxrwxr-x
+# directories within generated RPMs, which will conflict with existing
+# directories from irods packages, which will be rwxr-xr-x.
+# To create packages on CentOS 7, set your umask to 0022 first (`umask 0022`).
+
+set(CPACK_MONOLITHIC_INSTALL 1)
+set(CPACK_CMAKE_GENERATOR "Unix Makefiles")
+set(CPACK_GENERATOR "RPM;DEB")
+set(CPACK_PACKAGE_NAME "irods-sudo-microservices")
+set(CPACK_PACKAGE_VENDOR "Utrecht University <fbyoda@uu.nl>")
+set(CPACK_PACKAGE_CONTACT "Utrecht University <fbyoda@uu.nl>")
+set(CPACK_PACKAGE_VERSION "0.3")
+set(CPACK_PACKAGE_VERSION_MAJOR "0")
+set(CPACK_PACKAGE_VERSION_MINOR "3")
+set(CPACK_PACKAGE_VERSION_PATCH "0")
+set(CPACK_PACKAGE_DESCRIPTION_FILE "${CMAKE_CURRENT_SOURCE_DIR}/package/description.txt")
+set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "iRODS microservices for policy-enhanced administrative operations")
+
+set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/COPYING.LESSER")
+set(CPACK_RESOURCE_FILE_README  "${CMAKE_CURRENT_SOURCE_DIR}/README.md")
+
+set(CPACK_RPM_PACKAGE_RELEASE "1")
+set(CPACK_RPM_PACKAGE_LICENSE "LGPLv3")
+set(CPACK_RPM_PACKAGE_REQUIRES "irods-server = ${IRODS_VERSION}, irods-runtime = ${IRODS_VERSION}")
+set(CPACK_RPM_PACKAGE_URL "https://github.com/UtrechtUniversity/irods-sudo-microservices")
+set(CPACK_RPM_CHANGELOG_FILE "${CMAKE_CURRENT_SOURCE_DIR}/package/changelog.txt")
+set(CPACK_RPM_PACKAGE_AUTOREQ 0)
+set(CPACK_RPM_PACKAGE_AUTOPROV 0)
+
+# NOTE: We run into an issue with permissions on /etc/irods:
+# - The irods-setup.py sets ownership to irods:irods.
+# - We'd like to leave the permissions&ownership of this directory alone, but
+#   CMake doesn't let us.
+# - As a compromise we reset ownership to irods:irods using a post-install script.
+#   (currently only implemented in the RPM)
+#
+set(CPACK_RPM_POST_INSTALL_SCRIPT_FILE "${CMAKE_CURRENT_SOURCE_DIR}/package/postinst.sh")
+
+set(CPACK_DEBIAN_PACKAGE_DEPENDS "irods-server = ${IRODS_VERSION}, irods-runtime = ${IRODS_VERSION}")
+set(CPACK_DEBIAN_PACKAGE_HOMEPAGE "https://github.com/UtrechtUniversity/irods-sudo-microservices")
+set(CPACK_DEBIAN_PACKAGE_SECTION "contrib/science")
+
+include(CPack)
+
+# }}}

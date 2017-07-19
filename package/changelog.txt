@@ -1,0 +1,5 @@
+* Wed Feb  8 2017 Chris Smeele <c.j.smeele@uu.nl> - 0.2.0
+- Fixed: Handle "null" string parameters
+
+* Wed Aug 24 2016 Chris Smeele <c.j.smeele@uu.nl> - 0.1.0
+- Initial alpha version
