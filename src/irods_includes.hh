@@ -1,7 +1,7 @@
 /**
  * \file
  * \brief     iRODS includes.
- * \copyright Copyright (c) 2016, 2017, Utrecht University. All rights reserved.
+ * \copyright Copyright (c) 2016, 2017, Utrecht University
  */
 #pragma once
 

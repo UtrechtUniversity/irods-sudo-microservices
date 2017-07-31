@@ -2,7 +2,7 @@
  * \file
  * \brief     Object metadata set sudo microservice.
  * \author    Chris Smeele
- * \copyright Copyright (c) 2016, 2017, Utrecht University. All rights reserved.
+ * \copyright Copyright (c) 2016, 2017, Utrecht University
  */
 #include "common.hh"
 #include <rsModAVUMetadata.hpp>
