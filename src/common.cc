@@ -5,6 +5,7 @@
  * \copyright Copyright (c) 2016, 2017, Utrecht University. All rights reserved.
  */
 #include "common.hh"
+#include <rcMisc.h>
 
 namespace Sudo {
 
@@ -49,7 +50,17 @@ namespace Sudo {
                 } else if (!strcmp(p->type, INT_MS_T)) {
                     argList.push_back(parseMspForPosInt(p));
                 } else if (!strcmp(p->type, KeyValPair_MS_T)) {
-                    argList.push_back((keyValPair_t*)p->inOutStruct);
+                    // Add two dummy key value pairs to work around a
+                    // 4.2.1 bug: https://github.com/irods/irods/issues/3617
+                    // When a keyValPair_t contains only a single k/v
+                    // pair, it is serialized as a string in the iRODS
+                    // rule language engine plugin. There is currently
+                    // no way to pass a kvp of size 1 to an iRODS rule
+                    // from a microservice.
+                    // This should be fixed in 4.2.2.
+                    addKeyVal((keyValPair_t*)(p->inOutStruct), "__dummy1", "_");
+                    addKeyVal((keyValPair_t*)(p->inOutStruct), "__dummy2", "_");
+                    argList.push_back((keyValPair_t*)(p->inOutStruct));
                 } else { // Add types when needed.
                     writeLog(__func__, LOG_ERROR, "Unsupported MSI parameter type <"s + p->type + ">");
                 }
