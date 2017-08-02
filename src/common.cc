@@ -1,12 +1,17 @@
 /**
  * \file
- * \brief     Group add sudo microservice.
+ * \brief     Common sudo microservice functionalities.
  * \author    Chris Smeele
- * \copyright Copyright (c) 2016, Utrecht University. All rights reserved.
+ * \copyright Copyright (c) 2016, 2017, Utrecht University
  */
 #include "common.hh"
+#include <rcMisc.h>
 
 namespace Sudo {
+
+    void writeLog(const std::string &funcName, int type, const std::string &msg) {
+        rodsLog(type, ("Sudo MSI "s + funcName + ": " + msg).c_str());
+    }
 
     std::tuple<std::string, std::string> splitUserZone(const std::string &userZoneStr,
                                                        const ruleExecInfo_t *rei) {
@@ -20,33 +25,6 @@ namespace Sudo {
         }
     }
 
-    int sudo(ruleExecInfo_t *rei, std::function<int()> f) {
-        // Backup.
-        int authBupC = rei->uoic->authInfo.authFlag;
-        int authBupP = rei->uoip->authInfo.authFlag;
-
-        // Elevate privileges.
-        rei->uoic->authInfo.authFlag = LOCAL_PRIV_USER_AUTH;
-        rei->uoip->authInfo.authFlag = LOCAL_PRIV_USER_AUTH;
-
-        int ret = -1;
-
-        try {
-            // Call privileged function.
-            ret = f();
-        } catch (...) {
-            // Restore privileges.
-            rei->uoip->authInfo.authFlag = authBupP;
-            rei->uoic->authInfo.authFlag = authBupC;
-            throw;
-        }
-
-        rei->uoip->authInfo.authFlag = authBupP;
-        rei->uoic->authInfo.authFlag = authBupC;
-
-        return ret;
-    }
-
     std::string stringFromMsp(msParam_t *param) {
         if (!param)
             return "null";
@@ -56,104 +34,56 @@ namespace Sudo {
         return str ? str : "null";
     }
 
-    ParamArray &ParamArray::operator<<(const ParamParam &param) {
-        char      *label = strdup(std::get<0>(param).c_str());
-        msParam_t *value = std::get<1>(param);
-        assert(label);
-        assert(value);
-        toFree.push_back(label);
-        addMsParam(&array, label, param.second->type, value->inOutStruct, value->inpOutBuf);
+    std::list<boost::any> anyifyMsParams(const std::vector<msParam_t*> &msParams) {
 
-        labels.push_back(std::get<0>(param));
-        return *this;
-    }
+        std::list<boost::any> argList;
 
-    ParamArray &ParamArray::operator<<(const StrParam &param) {
-        char *label = strdup(param.first.c_str());
-        char *value = strdup(param.second.c_str());
-        assert(label);
-        assert(value);
-        toFree.push_back(label);
-        toFree.push_back(value);
-        addMsParamToArray(&array, label, STR_MS_T, value, NULL, 0);
-        labels.push_back(param.first);
-        return *this;
-    }
+        for (auto p : msParams) {
+            if (p && p->type && p->inOutStruct) {
+                // p->type is NULL when we have an undefined variable
+                // as an argument.  Since we never have output-only
+                // parameters, we can require all parameters to be
+                // defined.
 
-    ParamArray &ParamArray::operator<<(const IntParam &param) {
-        char *label = strdup(param.first.c_str());
-        assert(label);
-        addIntParamToArray(&array, label, param.second);
-        labels.push_back(param.first);
-        toFree.push_back(label);
-        return *this;
-    }
-
-    ParamArray &ParamArray::operator<<(const std::string &param) {
-        char *label = strdup(param.c_str());
-        assert(label);
-        addMsParamToArray(&array, label, NULL, NULL, NULL, 0);
-        labels.push_back(param);
-        toFree.push_back(label);
-        return *this;
-    }
-
-    std::string ParamArray::getType(const std::string &label) {
-        msParam_t *param = getMsParamByLabel(&array, label.c_str());
-
-        if (param) {
-            return param->type;
-        } else {
-            return "";
-        }
-    }
-
-    std::string ParamArray::getStr(const std::string &label) {
-        msParam_t *param = getMsParamByLabel(&array, label.c_str());
-
-        if (param) {
-            char *value = parseMspForStr(param);
-            if (value)
-                return value;
-            else
-                return ""; // XXX
-        } else {
-            return "";
-        }
-    }
-
-    int ParamArray::getInt(const std::string &label) {
-        msParam_t *param = getMsParamByLabel(&array, label.c_str());
-
-        if (param)
-            return parseMspForPosInt(param);
-        else
-            return -1;
-    }
-
-    int callRule(const std::string &ruleName, ParamArray &params, ruleExecInfo_t *rei) {
-        std::string header = ruleName + "(";
-
-        std::set<std::string> seenLabels { };
-        int i = 0;
-
-        for (auto label : params.getLabels()) {
-            if (seenLabels.find(label) == seenLabels.end()) {
-                seenLabels.insert(label);
-                if (i++)
-                    header += ',';
-                header += label;
+                if (!strcmp(p->type, STR_MS_T)) {
+                    argList.push_back(stringFromMsp(p));
+                } else if (!strcmp(p->type, INT_MS_T)) {
+                    argList.push_back(parseMspForPosInt(p));
+                } else if (!strcmp(p->type, KeyValPair_MS_T)) {
+                    // Add two dummy key value pairs to work around a
+                    // 4.2.1 bug: https://github.com/irods/irods/issues/3617
+                    // When a keyValPair_t contains only a single k/v
+                    // pair, it is serialized as a string in the iRODS
+                    // rule language engine plugin. There is currently
+                    // no way to pass a kvp of size 1 to an iRODS rule
+                    // from a microservice.
+                    // This should be fixed in 4.2.2.
+                    addKeyVal((keyValPair_t*)(p->inOutStruct), "__dummy1", "_");
+                    addKeyVal((keyValPair_t*)(p->inOutStruct), "__dummy2", "_");
+                    argList.push_back((keyValPair_t*)(p->inOutStruct));
+                } else { // Add types when needed.
+                    writeLog(__func__, LOG_ERROR, "Unsupported MSI parameter type <"s + p->type + ">");
+                }
+            } else {
+                writeLog(__func__, LOG_ERROR, "NULL MSI parameter");
             }
         }
-        header += ')';
-        char *headerCopy = strdup(header.c_str());
-        assert(headerCopy);
 
-        int status = applyRuleUpdateParams(headerCopy, &params.array, rei, NO_SAVE_REI);
-        // int status = applyRuleUpdateParams(headerCopy, &params.array, rei, SAVE_REI);
-        // XXX save rei or not?
+        return argList;
+    }
 
-        free(headerCopy);
-        return status;
+    int callRule(const std::string &ruleName,
+                 const std::vector<msParam_t*> &msParams,
+                 ruleExecInfo_t *rei) {
+
+        return callRule(ruleName, anyifyMsParams(msParams), rei);
+    }
+
+    int callRule(const std::string &ruleName, const std::list<boost::any> &params_, ruleExecInfo_t *rei) {
+
+        // Copy params, because applyRuleWithInOutVars expects a mutable list.
+        auto params = params_;
+
+        return applyRuleWithInOutVars(ruleName.c_str(), params, rei);
     }
 }
