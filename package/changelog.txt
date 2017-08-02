@@ -1,3 +1,7 @@
+* Wed Aug  2 2017 Chris Smeele <c.j.smeele@uu.nl> - 4.2.1_1.0.0
+- Switched build system to CMake
+- iRODS 4.2.1 compatibility
+
 * Wed Feb  8 2017 Chris Smeele <c.j.smeele@uu.nl> - 0.2.0
 - Fixed: Handle "null" string parameters
 
