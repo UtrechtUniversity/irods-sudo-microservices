@@ -1,19 +1,21 @@
 /**
  * \file
- * \brief     Group add sudo microservice.
+ * \brief     Common sudo microservice functionalities.
  * \author    Chris Smeele
- * \copyright Copyright (c) 2016, Utrecht University. All rights reserved.
+ * \copyright Copyright (c) 2016, 2017, Utrecht University
  */
 #pragma once
 
 #include "irods_includes.hh"
 #include <vector>
 #include <string>
-#include <ostream>
 #include <functional>
 #include <tuple>
 
 namespace Sudo {
+    using namespace std::literals::string_literals;
+
+    void writeLog(const std::string &funcName, int type, const std::string &msg);
 
     std::tuple<std::string, std::string> splitUserZone(const std::string &userZoneStr,
                                                        const ruleExecInfo_t *rei);
@@ -28,12 +30,38 @@ namespace Sudo {
      * Use this function with care, try to limit the amount of code
      * that executes within the function.
      *
-     * \param rei The rule execution info struct.
-     * \param f   The function to execute with altered privileges.
+     * \param rei  The rule execution info struct.
+     * \param func The function to execute with altered privileges.
      *
-     * \return    The return value of the provided function.
+     * \return     The return value of the provided function.
      */
-    int sudo(ruleExecInfo_t *rei, std::function<int()> f);
+    template<typename F>
+    int sudo(ruleExecInfo_t *rei, F func) {
+        // Backup.
+        int authBupC = rei->uoic->authInfo.authFlag;
+        int authBupP = rei->uoip->authInfo.authFlag;
+
+        // Elevate privileges.
+        rei->uoic->authInfo.authFlag = LOCAL_PRIV_USER_AUTH;
+        rei->uoip->authInfo.authFlag = LOCAL_PRIV_USER_AUTH;
+
+        int ret = -1;
+
+        try {
+            // Call privileged function.
+            ret = func();
+        } catch (...) {
+            // Restore privileges.
+            rei->uoip->authInfo.authFlag = authBupP;
+            rei->uoic->authInfo.authFlag = authBupC;
+            throw;
+        }
+
+        rei->uoip->authInfo.authFlag = authBupP;
+        rei->uoic->authInfo.authFlag = authBupC;
+
+        return ret;
+    }
 
     /**
      * \brief Get a string from the given msParam.
@@ -53,65 +81,33 @@ namespace Sudo {
      */
     std::string stringFromMsp(msParam_t *param);
 
-    typedef std::pair<std::string, msParam_t*> ParamParam;
-    typedef std::pair<std::string, std::string>  StrParam;
-    typedef std::pair<std::string, int>          IntParam;
+    /**
+     * \brief Convert a list of msParams (of STR, INT or KeyVal types)
+     *        to boost::any-wrapped types that are serializable by iRODS.
+     *
+     * Unconvertible types and undefined parameters are logged as
+     * errors and discarded from the output.
+     *
+     * \param msParams
+     *
+     * \return
+     */
+    std::list<boost::any> anyifyMsParams(const std::vector<msParam_t*> &msParams);
 
-    class ParamArray {
-        std::vector<std::string> labels;
-        std::vector<void*> toFree;
-
-    public:
-        msParamArray_t array;
-        const std::vector<std::string> &getLabels() {
-            return labels;
-        }
-
-        ParamArray &operator<<(const ParamParam  &param);
-        ParamArray &operator<<(const StrParam    &param);
-        ParamArray &operator<<(const IntParam    &param);
-        ParamArray &operator<<(const std::string &param);
-
-        std::string getType(const std::string &label);
-        std::string getStr( const std::string &label);
-        int         getInt( const std::string &label);
-
-        ParamArray()
-            : array{ }
-            { }
-
-        ~ParamArray() {
-            clearMsParamArray(&array, false);
-            for (void *s : toFree)
-                free(s);
-        }
-
-        friend int callRule(const std::string&, ParamArray&, ruleExecInfo_t*);
-    };
-
-    // MSI signature shorthands for use with policify().
-    // Due to template characteristics, we need to have the rei
-    // parameter up front. 
-    typedef std::function<int(ruleExecInfo_t*,
-                              msParam_t*)> msi_1param_t;
-    typedef std::function<int(ruleExecInfo_t*,
-                              msParam_t*, msParam_t*)> msi_2param_t;
-    typedef std::function<int(ruleExecInfo_t*,
-                              msParam_t*, msParam_t*, msParam_t*)> msi_3param_t;
-    typedef std::function<int(ruleExecInfo_t*,
-                              msParam_t*, msParam_t*, msParam_t*, msParam_t*)> msi_4param_t;
-    typedef std::function<int(ruleExecInfo_t*,
-                              msParam_t*, msParam_t*, msParam_t*, msParam_t*,
-                              msParam_t*)> msi_5param_t;
-    typedef std::function<int(ruleExecInfo_t*,
-                              msParam_t*, msParam_t*, msParam_t*, msParam_t*,
-                              msParam_t*, msParam_t*)> msi_6param_t;
-    typedef std::function<int(ruleExecInfo_t*,
-                              msParam_t*, msParam_t*, msParam_t*, msParam_t*,
-                              msParam_t*, msParam_t*, msParam_t*)> msi_7param_t;
-    typedef std::function<int(ruleExecInfo_t*,
-                              msParam_t*, msParam_t*, msParam_t*, msParam_t*,
-                              msParam_t*, msParam_t*, msParam_t*, msParam_t*)> msi_8param_t;
+    /**
+     * \brief Call a rule with the given boost::any parameters.
+     *
+     * Output parameters are not supported.
+     *
+     * \param ruleName
+     * \param msParams
+     * \param rei
+     *
+     * \return The rule status code
+     */
+    int callRule(const std::string &ruleName,
+                 const std::list<boost::any> &msParams,
+                 ruleExecInfo_t *rei);
 
     /**
      * \brief Apply pre- and post actions around an MSI call.
@@ -123,40 +119,45 @@ namespace Sudo {
      * The `pre` and `post` actions are called with the same
      * parameters as the MSI itself.
      *
+     * If any of the input parameters are not defined or of an
+     * unrecognized type (only int, string and keyval list are
+     * supported), a SYS_INVALID_INPUT_PARAM error is returned.
+     *
      * The `msParam_t` parameters should not be modified by the `pre`
      * and `post` actions. Any changes will not be visible to the
      * microservice.
-     * 
+     *
      * \tparam Arg... Any number of `msParam_t` types.
-     * 
+     *
      * \param name    The name that's used to generate policy names (i.e. `"acPre" + name + "()"`)
-     * \param f       The msi implementation. Parameter order must be `rei*` first, then `msParam*`s.
+     * \param f       The msi implementation callable. Parameter order must be `rei*` first, then `msParam*`s.
      * \param rei     The rule execution information.
      * \param args... The `Arg...` amount of `msParam_t` parameters to be passed to the MSI.
      *
      * \return 0 if both policies and the actual msi succeeded,
      *         otherwise the first error code encountered.
      */
-    template<class ...Arg>
+    template<typename F, typename... Arg>
     int policify(const std::string &name,
-                 std::function<int(ruleExecInfo_t*, Arg...)> f,
+                 F func,
                  ruleExecInfo_t *rei,
                  Arg... args) {
 
-        ParamArray params;
-        size_t i = 0;
-        for (auto &param : {args...})
-            params << ParamParam(std::string("*___param") + std::to_string(++i), param);
-        
-        int status = callRule(std::string("acPre") + name, params, rei);
-        if (status) 
+        auto argList = anyifyMsParams({args...});
+        if (argList.size() != sizeof...(args)) {
+            // Could not parse all arguments (unrecognized types or undefined arguments).
+            return SYS_INVALID_INPUT_PARAM;
+        }
+
+        int status = callRule("acPre"s + name, argList, rei);
+        if (status)
             return status;
 
-        status = f(rei, args...);
-        if (status) 
+        status = func(rei, args...);
+        if (status)
             return status;
 
-        status = callRule(std::string("acPost") + name, params, rei);
+        status = callRule("acPost"s + name, argList, rei);
         return status;
     }
 }
