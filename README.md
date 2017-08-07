@@ -1,10 +1,11 @@
 iRODS Sudo Microservices
 ========================
 
-The Sudo microservices provide policy-enhanced administrative
-operations for managing users, groups, metadata and ACLs.
-They allow regular iRODS users to perform administrative actions
-authorized by policies.
+The Sudo microservices empower users to execute operations typically
+reserved for iRODS administrators. Combined with application of the
+iRODS programmable policies they facilitate fine-grained delegation of
+authority.  The supported operations cover managing users and groups,
+metadata and ACLs.
 
 ## Download ##
 
