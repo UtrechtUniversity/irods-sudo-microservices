@@ -36,12 +36,13 @@ By default, access to the sudo microservices is denied to all users.
 By implementing pre- and postproc policy rules, you can selectively
 grant access.
 
-A default policy ruleset is provided in
-`/etc/irods/sudo-default-policies.re` or the `policies.re` file in
-this repository. You can use this file as a template for your policy
+A default policy ruleset is provided in `policies.re`, which is
+installed in `/etc/irods/sudo-default-policies.re`. This file can be
+added to the ruleset list in the iRODS server config json.
+You can use this file as a template for your policy
 implementations.
 
-Every microservice has its own pre- and postproc rule. The naming
+Every microservice has its own pre- and postproc policy rule. The naming
 scheme follows this example:
 
     msiSudoUserAdd() has policy rules acPreSudoUserAdd() and acPostSudoUserAdd()
@@ -140,7 +141,7 @@ Removes a user from a group.
 
 Modifies ACLs on data objects and collections.
 
-`*recursive` can be either the string `recursive` to apply the change
+`*recursive` can be either the string `"recursive"` to apply the change
 recursively, or an empty string `""` to modify only the given object.
 
 `*accessLevel` can be one of `null`, `read`, `write`, `own`, `inherit`
@@ -180,7 +181,7 @@ Remove metadata from an object.
 
 `*wildcards` indicates whether `%` characters in AVU parameters should
 be interpreted as wildcards. The value of this parameter can be either
-the string `wildcards` or an empty string `""`.
+the string `"wildcards"` or an empty string `""`.
 
 ## Building from source ##
 

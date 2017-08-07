@@ -1,11 +1,12 @@
 # \file
 # \brief  Default policies for Sudo microservices.
-# \author Chris Smeele
+#
+# This file is in the public domain.
 
 # This is a list of default policy implementations. All rules fail by
 # default.
 # To allow a certain sudo action, implement the corresponding pre- and
-# post- rules in a different ruleset. You can leave this file as-is.
+# post- rules.
 
 # User and group management {{{
 
