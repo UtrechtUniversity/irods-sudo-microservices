@@ -9,9 +9,10 @@ metadata and ACLs.
 
 ## Download ##
 
-We distribute RPM packages for iRODS 4.2.1:
+We distribute RPM packages for iRODS 4.2.1 and iRODS 4.1.8:
 
 - [`irods-sudo-microservices-4.2.1_1.0.0`](https://github.com/UtrechtUniversity/irods-sudo-microservices/releases/tag/4.2.1_1.0.0)
+- [`irods-sudo-microservices-4.1.8_0.2.0`](https://github.com/UtrechtUniversity/irods-sudo-microservices/releases/tag/0.2)
 
 The left side (4.2.1) of the version number indicates the compatible
 iRODS server version. The right side (1.0.0) is the major/minor/patch
