@@ -30,13 +30,29 @@ Sudo microservices can be installed using the RPMs provided on the
 You can also build the microservices yourself, see
 [Building from source](#building-from-source).
 
+## Security Considerations ##
+
+Sudo Microservices provide a way for normal iRODS users to perform
+normally restricted operations. The administrator-defined policy rules
+are the only barrier that can perform authorization and check the
+validity of each msi call. Misconfiguration can result in security
+breaches.
+
+With that in mind, we have a few recommendations for policy
+implementors:
+
+- Keep policy rules concise and readable
+- Document each condition extensively
+- Use a whitelist approach instead of a blacklist approach
+
 ## Configuration / Policy implementation ##
 
-By default, access to the sudo microservices is denied to all users.
+By default, when no policies have been defined, access to the sudo
+microservices is denied to all users.
 By implementing pre- and postproc policy rules, you can selectively
 grant access.
 
-A default policy ruleset is provided in `policies.re`, which is
+An example policy ruleset is provided in `policies.re`, which is
 installed in `/etc/irods/sudo-default-policies.re`. This file can be
 added to the ruleset list in the iRODS server config json.
 You can use this file as a template for your policy
