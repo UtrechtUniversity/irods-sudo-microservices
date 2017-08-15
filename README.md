@@ -7,6 +7,11 @@ iRODS programmable policies they facilitate fine-grained delegation of
 authority.  The supported operations cover managing users and groups,
 metadata and ACLs.
 
+See
+[Documentation for individual microservices](#documentation-for-individual-microservices)
+for the list of microservices and their parameter specification.
+
+
 ## Download ##
 
 We distribute RPM packages for iRODS 4.2.1 and iRODS 4.1.8:
@@ -102,10 +107,6 @@ If you do not want to have multiple implementations of the pre rule,
 simply insert the logging calls into the authorizing rule.
 
 ## Calling Sudo Microservices ##
-
-See
-[Documentation for individual microservices](#documentation-for-individual-microservices)
-for the list of microservices and their parameter specification.
 
 A microservice call will succeed (return status 0) only if its 'pre-'
 rule, the operation itself *and* the post rule succeed.
