@@ -1,3 +1,6 @@
+* Tue Apr 10 2018 Chris Smeele <c.j.smeele@uu.nl> - 4.2.2_1.0.0
+- Rebuilt for 4.2.2 without changes
+
 * Wed Aug  2 2017 Chris Smeele <c.j.smeele@uu.nl> - 4.2.1_1.0.0
 - Switched build system to CMake
 - iRODS 4.2.1 compatibility
