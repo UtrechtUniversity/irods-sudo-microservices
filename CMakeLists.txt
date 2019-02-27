@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 2.8.12)
 
-find_package(IRODS 4.2.2 EXACT REQUIRED)
+find_package(IRODS 4.2.5 EXACT REQUIRED)
 
 message(STATUS "Building for irods-server version ${IRODS_VERSION}")
 
@@ -83,7 +83,7 @@ set(CPACK_GENERATOR "RPM")
 set(CPACK_PACKAGE_NAME "irods-sudo-microservices")
 set(CPACK_PACKAGE_VENDOR "Utrecht University <fbyoda@uu.nl>")
 set(CPACK_PACKAGE_CONTACT "Utrecht University <fbyoda@uu.nl>")
-set(CPACK_PACKAGE_VERSION "4.2.2_1.0.0")
+set(CPACK_PACKAGE_VERSION "4.2.5_1.0.0")
 #set(CPACK_PACKAGE_VERSION_MAJOR "1")
 #set(CPACK_PACKAGE_VERSION_MINOR "0")
 #set(CPACK_PACKAGE_VERSION_PATCH "0")
