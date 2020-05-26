@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 2.8.12)
 
-find_package(IRODS 4.2.7 EXACT REQUIRED)
+find_package(IRODS 4.2.8 EXACT REQUIRED)
 
 message(STATUS "Building for irods-server version ${IRODS_VERSION}")
 
@@ -34,6 +34,12 @@ set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -stdlib=libc++")
 link_libraries(c++abi)
 include_directories("${IRODS_EXTERNALS_FULLPATH_CLANG}/include/c++/v1")
 include_directories("/usr/include/irods")
+
+set(BOOST_ROOT "${IRODS_EXTERNALS_FULLPATH_BOOST}")
+
+find_package(Boost REQUIRED)
+include_directories(SYSTEM ${Boost_INCLUDE_DIR})
+link_libraries(${Boost_LIBRARIES})
 
 # Common functionalities required by all sudo msis.
 add_library(sudo_common              STATIC src/common.cc)
@@ -83,7 +89,7 @@ set(CPACK_GENERATOR "RPM")
 set(CPACK_PACKAGE_NAME "irods-sudo-microservices")
 set(CPACK_PACKAGE_VENDOR "Utrecht University <fbyoda@uu.nl>")
 set(CPACK_PACKAGE_CONTACT "Utrecht University <fbyoda@uu.nl>")
-set(CPACK_PACKAGE_VERSION "4.2.7_1.0.0")
+set(CPACK_PACKAGE_VERSION "4.2.8_1.0.0")
 #set(CPACK_PACKAGE_VERSION_MAJOR "1")
 #set(CPACK_PACKAGE_VERSION_MINOR "0")
 #set(CPACK_PACKAGE_VERSION_PATCH "0")
