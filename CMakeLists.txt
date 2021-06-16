@@ -15,7 +15,7 @@ set(CMAKE_CXX_COMPILER ${IRODS_EXTERNALS_FULLPATH_CLANG}/bin/clang++)
 
 project(sudo-msis CXX)
 
-add_compile_options(-std=c++14
+add_compile_options(-std=c++17
                     -Os
                     -fPIC
                     -DRODS_SERVER
@@ -89,7 +89,7 @@ set(CPACK_GENERATOR "RPM")
 set(CPACK_PACKAGE_NAME "irods-sudo-microservices")
 set(CPACK_PACKAGE_VENDOR "Utrecht University <fbyoda@uu.nl>")
 set(CPACK_PACKAGE_CONTACT "Utrecht University <fbyoda@uu.nl>")
-set(CPACK_PACKAGE_VERSION "4.2.8_1.0.0")
+set(CPACK_PACKAGE_VERSION "4.2.9_1.0.0")
 #set(CPACK_PACKAGE_VERSION_MAJOR "1")
 #set(CPACK_PACKAGE_VERSION_MINOR "0")
 #set(CPACK_PACKAGE_VERSION_PATCH "0")
