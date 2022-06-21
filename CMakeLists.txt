@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 2.8.12)
 
-find_package(IRODS 4.2.11 EXACT REQUIRED)
+find_package(IRODS 4.3.0 EXACT REQUIRED)
 
 message(STATUS "Building for irods-server version ${IRODS_VERSION}")
 
@@ -8,8 +8,8 @@ message(STATUS "Building for irods-server version ${IRODS_VERSION}")
 # standard libarary provided by iRODS-externals packages.
 # The following packages need to be installed to build the sudo microservices:
 #
-# irods-externals-clang-runtime3.8-0
-# irods-externals-clang3.8-0
+# irods-externals-clang-runtime13.0.0-0
+# irods-externals-clang13.0.0-0
 
 set(CMAKE_CXX_COMPILER ${IRODS_EXTERNALS_FULLPATH_CLANG}/bin/clang++)
 
@@ -20,6 +20,8 @@ add_compile_options(-std=c++17
                     -fPIC
                     -DRODS_SERVER
                     -nostdinc++
+                    -I/opt/irods-externals/json3.10.4-0/include
+                    -I/opt/irods-externals/fmt8.1.1-0/include
                     -Wall
                     -Wextra
                     -Wpedantic
