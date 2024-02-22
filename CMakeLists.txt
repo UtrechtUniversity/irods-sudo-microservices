@@ -1,4 +1,5 @@
 cmake_minimum_required(VERSION 2.8.12)
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/CMakeModules")
 
 find_package(IRODS 4.2.12 EXACT REQUIRED)
 
@@ -41,6 +42,9 @@ find_package(Boost REQUIRED)
 include_directories(SYSTEM ${Boost_INCLUDE_DIR})
 link_libraries(${Boost_LIBRARIES})
 
+find_package(LohmannJSON REQUIRED)
+include_directories(SYSTEM ${JSON_INCLUDE_DIR})
+
 # Common functionalities required by all sudo msis.
 add_library(sudo_common              STATIC src/common.cc)
 link_libraries(sudo_common)
@@ -82,14 +86,23 @@ install(FILES "policies.re"
 # directories from irods packages, which will be rwxr-xr-x.
 # To create packages on CentOS 7, set your umask to 0022 first (`umask 0022`).
 
+set(IRODS_MSVC_VERSION "1.0.0")
+
+# Determine which type of package should be generated
+if(IRODS_LINUX_DISTRIBUTION_NAME MATCHES "^(ubuntu|debian)$")
+    set(CPACK_GENERATOR "DEB")
+    set(CPACK_PACKAGE_VERSION "${IRODS_VERSION}-${IRODS_MSVC_VERSION}")
+elseif(IRODS_LINUX_DISTRIBUTION_NAME MATCHES "^(centos)$")
+    set(CPACK_GENERATOR "RPM")
+    set(CPACK_PACKAGE_VERSION "${IRODS_VERSION}_${IRODS_MSVC_VERSION}")
+endif()
+
+
 set(CPACK_MONOLITHIC_INSTALL 1)
 set(CPACK_CMAKE_GENERATOR "Unix Makefiles")
-#set(CPACK_GENERATOR "RPM;DEB")
-set(CPACK_GENERATOR "RPM")
 set(CPACK_PACKAGE_NAME "irods-sudo-microservices")
 set(CPACK_PACKAGE_VENDOR "Utrecht University <fbyoda@uu.nl>")
 set(CPACK_PACKAGE_CONTACT "Utrecht University <fbyoda@uu.nl>")
-set(CPACK_PACKAGE_VERSION "4.2.12_1.0.0")
 #set(CPACK_PACKAGE_VERSION_MAJOR "1")
 #set(CPACK_PACKAGE_VERSION_MINOR "0")
 #set(CPACK_PACKAGE_VERSION_PATCH "0")
@@ -116,7 +129,7 @@ set(CPACK_RPM_PACKAGE_AUTOPROV 0)
 #
 set(CPACK_RPM_POST_INSTALL_SCRIPT_FILE "${CMAKE_CURRENT_SOURCE_DIR}/package/postinst.sh")
 
-set(CPACK_DEBIAN_PACKAGE_DEPENDS "irods-server = ${IRODS_VERSION}")
+set(CPACK_DEBIAN_PACKAGE_DEPENDS "irods-server ( = ${IRODS_VERSION}-1~bionic )")
 set(CPACK_DEBIAN_PACKAGE_HOMEPAGE "https://github.com/UtrechtUniversity/irods-sudo-microservices")
 set(CPACK_DEBIAN_PACKAGE_SECTION "contrib/science")
 
