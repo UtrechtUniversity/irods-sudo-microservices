@@ -1,7 +1,19 @@
 # Output files
+*.deb
 *.o
+*.rpm
 *.so
 /build
+
+# Intermediate files
+CMakeCache.txt
+CPackConfig.cmake
+CPackSourceConfig.cmake
+Makefile
+cmake_install.cmake
+install_manifest.txt
+_CPack_Packages/
+CMakeFiles/
 
 # Local files
 /dist
@@ -16,3 +28,7 @@ GTAGS
 tags
 \#*
 .\#*
+
+# Vagrant files
+/vagrant/build/.vagrant
+/vagrant/build/*.log
