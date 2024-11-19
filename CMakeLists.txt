@@ -1,7 +1,7 @@
-cmake_minimum_required(VERSION 2.8.12)
+cmake_minimum_required(VERSION 3.21.4 FATAL_ERROR)
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/CMakeModules")
 
-find_package(IRODS 4.2.12 EXACT REQUIRED)
+find_package(IRODS 4.3.3 EXACT REQUIRED)
 
 message(STATUS "Building for irods-server version ${IRODS_VERSION}")
 
@@ -9,8 +9,10 @@ message(STATUS "Building for irods-server version ${IRODS_VERSION}")
 # standard libarary provided by iRODS-externals packages.
 # The following packages need to be installed to build the sudo microservices:
 #
-# irods-externals-clang-runtime3.8-0
-# irods-externals-clang3.8-0
+# irods-externals-cmake3.21.4-0
+# irods-externals-clang13.0.0-0
+# irods-externals-json3.10.4-0
+# irods-externals-fmt8.1.1-0
 
 set(CMAKE_CXX_COMPILER ${IRODS_EXTERNALS_FULLPATH_CLANG}/bin/clang++)
 
@@ -37,13 +39,16 @@ include_directories("${IRODS_EXTERNALS_FULLPATH_CLANG}/include/c++/v1")
 include_directories("/usr/include/irods")
 
 set(BOOST_ROOT "${IRODS_EXTERNALS_FULLPATH_BOOST}")
-
 find_package(Boost REQUIRED)
 include_directories(SYSTEM ${Boost_INCLUDE_DIR})
 link_libraries(${Boost_LIBRARIES})
 
-find_package(LohmannJSON REQUIRED)
-include_directories(SYSTEM ${JSON_INCLUDE_DIR})
+find_package(fmt "8.1.1"
+  HINTS "${IRODS_EXTERNALS_FULLPATH_FMT}")
+link_libraries(fmt::fmt)
+
+find_package(nlohmann_json "3.10.4" REQUIRED)
+link_libraries(nlohmann_json::nlohmann_json)
 
 # Common functionalities required by all sudo msis.
 add_library(sudo_common              STATIC src/common.cc)
@@ -81,18 +86,26 @@ install(FILES "policies.re"
 # Packaging {{{
 
 # Make sure your umask is set correctly when packaging:
-# The default umask on CentOS 7 is 0002, which results in e.g. rwxrwxr-x
+# The default umask is 0002, which results in e.g. rwxrwxr-x
 # directories within generated RPMs, which will conflict with existing
 # directories from irods packages, which will be rwxr-xr-x.
-# To create packages on CentOS 7, set your umask to 0022 first (`umask 0022`).
+# To create packages, set your umask to 0022 first (`umask 0022`).
 
 set(IRODS_MSVC_VERSION "1.0.0")
 
+execute_process(
+  COMMAND "python3" "-c" "from __future__ import print_function; import distro; print(distro.id(), end='')"
+  RESULT_VARIABLE IRODS_EXECUTE_PROCESS_RESULT_LINUX_DISTRIBUTION_NAME
+  OUTPUT_VARIABLE IRODS_LINUX_DISTRIBUTION_NAME
+)
+
+message(STATUS "Found Linux distro ${IRODS_LINUX_DISTRIBUTION_NAME}")
+
 # Determine which type of package should be generated
-if(IRODS_LINUX_DISTRIBUTION_NAME MATCHES "^(ubuntu|debian)$")
+if (IRODS_LINUX_DISTRIBUTION_NAME MATCHES "^(ubuntu|debian)$")
     set(CPACK_GENERATOR "DEB")
     set(CPACK_PACKAGE_VERSION "${IRODS_VERSION}-${IRODS_MSVC_VERSION}")
-elseif(IRODS_LINUX_DISTRIBUTION_NAME MATCHES "^(centos)$")
+elseif (IRODS_LINUX_DISTRIBUTION_NAME STREQUAL "almalinux")
     set(CPACK_GENERATOR "RPM")
     set(CPACK_PACKAGE_VERSION "${IRODS_VERSION}_${IRODS_MSVC_VERSION}")
 endif()
@@ -129,7 +142,7 @@ set(CPACK_RPM_PACKAGE_AUTOPROV 0)
 #
 set(CPACK_RPM_POST_INSTALL_SCRIPT_FILE "${CMAKE_CURRENT_SOURCE_DIR}/package/postinst.sh")
 
-set(CPACK_DEBIAN_PACKAGE_DEPENDS "irods-server ( = ${IRODS_VERSION}-1~bionic )")
+set(CPACK_DEBIAN_PACKAGE_DEPENDS "irods-server ( = ${IRODS_VERSION}-1~jammy )")
 set(CPACK_DEBIAN_PACKAGE_HOMEPAGE "https://github.com/UtrechtUniversity/irods-sudo-microservices")
 set(CPACK_DEBIAN_PACKAGE_SECTION "contrib/science")
 
