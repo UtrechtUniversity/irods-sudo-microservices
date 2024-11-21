@@ -7,30 +7,23 @@ iRODS programmable policies they facilitate fine-grained delegation of
 authority.  The supported operations cover managing users and groups,
 metadata and ACLs.
 
-See
-[Documentation for individual microservices](#documentation-for-individual-microservices)
+See [Documentation for individual microservices](#documentation-for-individual-microservices)
 for the list of microservices and their parameter specification.
-
 
 ## Download ##
 
-We distribute RPM packages for iRODS 4.2.2, 4.2.1 and iRODS 4.1.8:
+We distribute DEB and RPM packages for iRODS 4.3.3 and iRODS 4.2.12:
 
-- [`irods-sudo-microservices-4.2.2_1.0.0`](https://github.com/UtrechtUniversity/irods-sudo-microservices/releases/tag/4.2.2_1.0.0)
-- [`irods-sudo-microservices-4.2.1_1.0.0`](https://github.com/UtrechtUniversity/irods-sudo-microservices/releases/tag/4.2.1_1.0.0)
-- [`irods-sudo-microservices-4.1.8_0.2.0`](https://github.com/UtrechtUniversity/irods-sudo-microservices/releases/tag/0.2)
+- [`irods-sudo-microservices-4.3.3_1.0.0`](https://github.com/UtrechtUniversity/irods-sudo-microservices/releases/tag/4.3.3_1.0.0)
+- [`irods-sudo-microservices-4.2.2_1.0.0`](https://github.com/UtrechtUniversity/irods-sudo-microservices/releases/tag/4.2.12_1.0.0)
 
-The left side (4.2.2) of the version number indicates the compatible
-iRODS server version. The right side (1.0.0) is the major/minor/patch
+The left side (4.3.3) of the version number indicates the compatible
+iRODS server version. The right side (1.2.0) is the major/minor/patch
 version of the microservices themselves.
-
-We do not currently package for Debian/Ubuntu based systems. Please let
-us know if you need a .DEB package by
-[creating an issue](https://github.com/UtrechtUniversity/irods-sudo-microservices/issues/new).
 
 ## Installation ##
 
-Sudo microservices can be installed using the RPMs provided on the
+Sudo microservices can be installed using the packages provided on the
 [releases page](https://github.com/UtrechtUniversity/irods-sudo-microservices/releases/).
 
 You can also build the microservices yourself, see
@@ -209,8 +202,10 @@ installed:
 - `cmake`
 - `make`
 - `irods-devel`
-- `irods-externals-clang3.8-0`
-- `irods-externals-clang-runtime3.8-0`
+- `irods-externals-cmake3.21.4-0`
+- `irods-externals-clang13.0.0-0`
+- `irods-externals-json3.10.4-0`
+- `irods-externals-fmt8.1.1-0`
 - `rpmdevtools` (if you are creating an RPM)
 
 Follow these instructions to build from source:
@@ -227,7 +222,7 @@ Follow these instructions to build from source:
 ```bash
 mkdir build
 cd build
-cmake ..
+/opt/irods-externals/cmake3.21.4-0/bin/cmake ..
 ```
 
 - Compile the project
@@ -275,7 +270,7 @@ page.
 
 ## License ##
 
-Copyright (c) 2016, 2017, Utrecht University.
+Copyright (c) 2016-2024 Utrecht University.
 
 Sudo Microservices is licensed under the GNU Lesser General Public
 License version 3 or higher (LGPLv3+). See the COPYING.LESSER file for
