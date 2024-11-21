@@ -142,7 +142,7 @@ set(CPACK_RPM_PACKAGE_AUTOPROV 0)
 #
 set(CPACK_RPM_POST_INSTALL_SCRIPT_FILE "${CMAKE_CURRENT_SOURCE_DIR}/package/postinst.sh")
 
-set(CPACK_DEBIAN_PACKAGE_DEPENDS "irods-server ( = ${IRODS_VERSION}-1~jammy )")
+set(CPACK_DEBIAN_PACKAGE_DEPENDS "irods-server ( = ${IRODS_VERSION}-0~noble )")
 set(CPACK_DEBIAN_PACKAGE_HOMEPAGE "https://github.com/UtrechtUniversity/irods-sudo-microservices")
 set(CPACK_DEBIAN_PACKAGE_SECTION "contrib/science")
 
