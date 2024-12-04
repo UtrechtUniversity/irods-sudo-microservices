@@ -2,7 +2,7 @@
  * \file
  * \brief     Group remove sudo microservice.
  * \author    Chris Smeele
- * \copyright Copyright (c) 2016, 2017, Utrecht University
+ * \copyright Copyright (c) 2016, 2017, 2024, Utrecht University
  */
 #include "common.hh"
 #include <rsGeneralAdmin.hpp>
@@ -22,7 +22,7 @@ namespace Sudo {
         generalAdminInp_t adminParams = { };
 
         adminParams.arg0 = const_cast<char*>("rm");
-        adminParams.arg1 = const_cast<char*>("user");
+        adminParams.arg1 = const_cast<char*>("group"); // https://github.com/irods/irods/issues/7380
         adminParams.arg2 = const_cast<char*>(groupName.c_str());
         adminParams.arg3 = const_cast<char*>(rei->uoic->rodsZone);
         adminParams.arg4 = const_cast<char*>("");
