@@ -12,13 +12,14 @@ for the list of microservices and their parameter specification.
 
 ## Download ##
 
-We distribute DEB and RPM packages for iRODS 4.3.3 and iRODS 4.2.12:
+We distribute DEB and RPM packages for iRODS 4.3.3 / 4.3.4 and iRODS 4.2.12:
 
+- [`irods-sudo-microservices-4.3.4_1.0.0`](https://github.com/UtrechtUniversity/irods-sudo-microservices/releases/tag/4.3.4_1.0.0)
 - [`irods-sudo-microservices-4.3.3_1.0.0`](https://github.com/UtrechtUniversity/irods-sudo-microservices/releases/tag/4.3.3_1.0.0)
-- [`irods-sudo-microservices-4.2.2_1.0.0`](https://github.com/UtrechtUniversity/irods-sudo-microservices/releases/tag/4.2.12_1.0.0)
+- [`irods-sudo-microservices-4.2.12_1.0.0`](https://github.com/UtrechtUniversity/irods-sudo-microservices/releases/tag/4.2.12_1.0.0)
 
-The left side (4.3.3) of the version number indicates the compatible
-iRODS server version. The right side (1.2.0) is the major/minor/patch
+The left side (4.3.4) of the version number indicates the compatible
+iRODS server version. The right side (1.0.0) is the major/minor/patch
 version of the microservices themselves.
 
 ## Installation ##
@@ -270,7 +271,7 @@ page.
 
 ## License ##
 
-Copyright (c) 2016-2024 Utrecht University.
+Copyright (c) 2016-2025 Utrecht University.
 
 Sudo Microservices is licensed under the GNU Lesser General Public
 License version 3 or higher (LGPLv3+). See the COPYING.LESSER file for
