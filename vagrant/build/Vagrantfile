@@ -11,7 +11,7 @@ RAM = 4096
 
 # Hostname
 HOST= "sudo-microservices.yoda.test"
-IP = "192.168.56.7"
+IP = "192.168.56.72"
 NETMASK = "255.255.255.0"
 
 Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
