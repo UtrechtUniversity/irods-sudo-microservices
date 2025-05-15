@@ -39,7 +39,7 @@ validity of each msi call. Misconfiguration can result in security
 breaches.
 
 With that in mind, we have a few recommendations for policy
-implementors:
+implementers:
 
 - Keep policy rules concise and readable
 - Document each condition extensively

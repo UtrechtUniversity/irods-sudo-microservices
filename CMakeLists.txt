@@ -6,7 +6,7 @@ find_package(IRODS 4.3.4 EXACT REQUIRED)
 message(STATUS "Building for irods-server version ${IRODS_VERSION}")
 
 # Note: Microservices for iRODS >=4.2 need to be built with the compiler and
-# standard libarary provided by iRODS-externals packages.
+# standard library provided by iRODS-externals packages.
 # The following packages need to be installed to build the sudo microservices:
 #
 # irods-externals-cmake3.21.4-0
