@@ -204,9 +204,8 @@ installed:
 - `make`
 - `irods-devel`
 - `irods-externals-cmake3.21.4-0`
-- `irods-externals-clang13.0.0-0`
+- `irods-externals-clang16.0.6-0`
 - `irods-externals-json3.10.4-0`
-- `irods-externals-fmt8.1.1-0`
 - `rpmdevtools` (if you are creating an RPM)
 
 Follow these instructions to build from source:

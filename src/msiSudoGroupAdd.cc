@@ -2,7 +2,7 @@
  * \file
  * \brief     Group add sudo microservice.
  * \author    Chris Smeele
- * \copyright Copyright (c) 2016, 2017, Utrecht University
+ * \copyright Copyright (c) 2016, 2017, 2025, Utrecht University
  */
 #include "common.hh"
 #include <rsGeneralAdmin.hpp>
@@ -44,10 +44,10 @@ namespace Sudo {
         generalAdminInp_t adminParams = { };
 
         adminParams.arg0 = const_cast<char*>("add");
-        adminParams.arg1 = const_cast<char*>("user");
+        adminParams.arg1 = const_cast<char*>("group");
         adminParams.arg2 = const_cast<char*>(groupName.c_str());
-        adminParams.arg3 = const_cast<char*>("rodsgroup");
-        adminParams.arg4 = const_cast<char*>(rei->uoic->rodsZone);
+        adminParams.arg3 = const_cast<char*>(rei->uoic->rodsZone);
+        adminParams.arg4 = const_cast<char*>("");
         adminParams.arg5 = const_cast<char*>("");
         adminParams.arg6 = const_cast<char*>("");
         adminParams.arg7 = const_cast<char*>("");
