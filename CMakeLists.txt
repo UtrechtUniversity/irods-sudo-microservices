@@ -1,7 +1,9 @@
 cmake_minimum_required(VERSION 3.21.4 FATAL_ERROR)
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/CMakeModules")
 
-find_package(IRODS 4.3.4 EXACT REQUIRED)
+set(IRODS_MINIMUM_VERSION "4.90.0")
+set(IRODS_MAXIMUM_VERSION "6.0.0")
+find_package(IRODS "${IRODS_MINIMUM_VERSION}...<${IRODS_MAXIMUM_VERSION}" REQUIRED)
 
 message(STATUS "Building for irods-server version ${IRODS_VERSION}")
 
@@ -10,11 +12,15 @@ message(STATUS "Building for irods-server version ${IRODS_VERSION}")
 # The following packages need to be installed to build the sudo microservices:
 #
 # irods-externals-cmake3.21.4-0
-# irods-externals-clang13.0.0-0
+# irods-externals-clang16.0.6-0
 # irods-externals-json3.10.4-0
-# irods-externals-fmt8.1.1-0
 
+include(IrodsCXXCompiler)
+
+set(CMAKE_CXX_STANDARD ${IRODS_CXX_STANDARD})
 set(CMAKE_CXX_COMPILER ${IRODS_EXTERNALS_FULLPATH_CLANG}/bin/clang++)
+
+include(IrodsRunpathDefaults)
 
 project(sudo-msis CXX)
 
@@ -22,7 +28,6 @@ add_compile_options(-std=c++17
                     -Os
                     -fPIC
                     -DRODS_SERVER
-                    -nostdinc++
                     -Wall
                     -Wextra
                     -Wpedantic
@@ -33,8 +38,6 @@ add_compile_options(-std=c++17
                     -Wno-missing-field-initializers
                     -Wno-unused-parameter)
 
-set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -stdlib=libc++")
-link_libraries(c++abi)
 include_directories("${IRODS_EXTERNALS_FULLPATH_CLANG}/include/c++/v1")
 include_directories("/usr/include/irods")
 
@@ -42,10 +45,6 @@ set(BOOST_ROOT "${IRODS_EXTERNALS_FULLPATH_BOOST}")
 find_package(Boost REQUIRED)
 include_directories(SYSTEM ${Boost_INCLUDE_DIR})
 link_libraries(${Boost_LIBRARIES})
-
-find_package(fmt "8.1.1"
-  HINTS "${IRODS_EXTERNALS_FULLPATH_FMT}")
-link_libraries(fmt::fmt)
 
 find_package(nlohmann_json "3.10.4" REQUIRED)
 link_libraries(nlohmann_json::nlohmann_json)
@@ -114,8 +113,8 @@ endif()
 set(CPACK_MONOLITHIC_INSTALL 1)
 set(CPACK_CMAKE_GENERATOR "Unix Makefiles")
 set(CPACK_PACKAGE_NAME "irods-sudo-microservices")
-set(CPACK_PACKAGE_VENDOR "Utrecht University <fbyoda@uu.nl>")
-set(CPACK_PACKAGE_CONTACT "Utrecht University <fbyoda@uu.nl>")
+set(CPACK_PACKAGE_VENDOR "Utrecht University Yoda Team <yoda@uu.nl>")
+set(CPACK_PACKAGE_CONTACT "Utrecht University Yoda Team <yoda@uu.nl>")
 #set(CPACK_PACKAGE_VERSION_MAJOR "1")
 #set(CPACK_PACKAGE_VERSION_MINOR "0")
 #set(CPACK_PACKAGE_VERSION_PATCH "0")
