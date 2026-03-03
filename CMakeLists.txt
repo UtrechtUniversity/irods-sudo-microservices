@@ -76,7 +76,7 @@ install(TARGETS
         msiSudoObjMetaAdd
         msiSudoObjMetaRemove
         DESTINATION
-        /usr/lib/irods/plugins/microservices)
+        ${CMAKE_INSTALL_LIBDIR}/irods/plugins/microservices)
 
 install(FILES "policies.re"
         DESTINATION /etc/irods
